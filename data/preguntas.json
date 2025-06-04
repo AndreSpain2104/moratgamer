@@ -1,0 +1,12 @@
+[
+    {
+        "audio": "static/audio/Antes De Los Veinte - Morat.mp3",
+        "opciones": ["Antes De Los Veinte", "Cuando Nadie Ve", "Mi Nuevo Vicio"],
+        "respuesta": "Antes de Los Veinte"
+    },
+    {
+        "audio": "astatic/audio/Cuánto Me Duele - Morat.mp3",
+        "opciones": ["Anres De Los Veinte", "Me Toca A Mi", "Cuanto Me Duele"],
+        "respuesta": "Cuanto Me duele"
+    }
+]

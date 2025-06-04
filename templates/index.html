@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎧 Adivina La Cancion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            background-size: 300% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .audio-section {
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .play-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            border: none;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6);
+        }
+
+        .play-button:active {
+            transform: translateY(-2px);
+        }
+
+        .play-button.playing {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .option-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .option-button:hover {
+            transform: translateY(-5px);
+            background: rgba(116, 185, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(116, 185, 255, 0.2);
+        }
+
+        .album-cover {
+            width: 120px;
+            height: 120px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .option-button:hover .album-cover {
+            transform: scale(1.05);
+        }
+
+        .option-button.correct {
+            background: linear-gradient(135deg, rgba(0, 184, 148, 0.3), rgba(0, 160, 133, 0.3));
+            border: 1px solid #00b894;
+            animation: correctAnswer 0.6s ease;
+        }
+
+        .option-button.incorrect {
+            background: linear-gradient(135deg, rgba(225, 112, 85, 0.3), rgba(214, 48, 49, 0.3));
+            border: 1px solid #e17055;
+            animation: incorrectAnswer 0.6s ease;
+        }
+
+        @keyframes correctAnswer {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes incorrectAnswer {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .score-container {
+            background: linear-gradient(135deg, rgba(255, 236, 210, 0.1), rgba(252, 182, 159, 0.1));
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .score-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .score-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin-top: 5px;
+        }
+
+        .game-over {
+            background: linear-gradient(135deg, rgba(168, 237, 234, 0.1), rgba(254, 214, 227, 0.1));
+            border-radius: 20px;
+            padding: 40px;
+            animation: gameOverAnimation 0.8s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes gameOverAnimation {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .restart-button {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            border: none;
+            border-radius: 25px;
+            padding: 15px 30px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .question-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(52, 152, 219, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: #fff;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mensaje-temporal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            z-index: 1000;
+            animation: mensajeAnimation 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .mensaje-temporal.success {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+
+        .mensaje-temporal.error {
+            background: linear-gradient(135deg, #e17055, #d63031);
+        }
+
+        @keyframes mensajeAnimation {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.7);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .transition-message {
+            background: rgba(26, 26, 46, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .time-bonus {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #feca57;
+            color: #2c3e50;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            animation: bonusAppear 0.5s ease;
+            font-size: 0.9rem;
+        }
+
+        @keyframes bonusAppear {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .play-button {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8rem;
+            }
+
+            .mensaje-temporal {
+                font-size: 1.1rem;
+                padding: 15px 30px;
+            }
+
+            .transition-message {
+                padding: 20px;
+                font-size: 1rem;
+            }
+            
+            .options-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .option-button {
+                min-height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="question-counter">
+            <span id="current-question">1</span> / <span id="total-questions">5</span>
+        </div>
+
+        <h1>Adivina la Canción de Morat</h1>
+            <p class="subtitle">Escucha el "Ohh" y elige la canción correcta. ¡Entre más rápido respondas, más puntos extra obtendrás!</p>
+
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="score-container">
+            <div class="score-item">
+                <div class="score-number" id="correct-score">0</div>
+                <div class="score-label">Correctas</div>
+            </div>
+            <div class="score-item">
+                <div class="score-number" id="total-score">0</div>
+                <div class="score-label">Total</div>
+            </div>
+            <div class="score-item">
+                <div class="score-number" id="percentage">0%</div>
+                <div class="score-label">Aciertos</div>
+            </div>
+            <div class="score-item">
+                <div class="score-number" id="bonus-score">0</div>
+                <div class="score-label">Bonus</div>
+            </div>
+        </div>
+
+        <div class="audio-section">
+            <button class="play-button" id="play-button">
+                <span id="play-icon">🔊</span>
+            </button>
+        </div>
+
+        <div class="options-container" id="opciones"></div>
+    </div>
+
+    <script>
+        // Datos actualizados con portadas de álbumes
+        let preguntas = [
+            {
+                audio: "static/audio/Antes De Los Veinte - Morat.mp3",
+                opciones: [
+                    { texto: "Me Toca A Mi", imagen: "https://bloximages.chicago2.vip.townnews.com/kq105.com/content/tncms/assets/v3/editorial/4/37/437874b3-c0d4-4b73-9ae5-d1ed2fd7c11c/67e6fb6383e63.image.png?resize=990%2C777" },
+                    { texto: "La Correcta", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5fLJaiAg7s4qoBXoCeQYJ-s8h4YQML23r0xSQORpBX4Susgko7-6A-oGmbsW6KjwTQRg&usqp=CAU" },
+                    { texto: "Antes De Los Treinta", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlsCtmcK0pCDmcq8BgzALJTeTFgu8vpXlrZXLzthwiChFODs7JY13zWVeWODt9eQD6HVM&usqp=CAU" },
+                    { texto: "Antes De Los Veinte", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQYJWluOOySuUaLOyiX7PAP3X4U2Enrr-JGw&s" }
+                ],
+                respuesta: "Antes De Los Veinte"
+            },
+            
+            {
+                audio: "static/audio/Cuánto Me Duele - Morat.mp3",
+                opciones: [
+                    { texto: "Cuánto Me Duele", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" },
+                    { texto: "Di Que No Te Vas", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" },
+                    { texto: "En Un Solo Día", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" },
+                    { texto: "Amor Con Hielo", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStj7L6qsEMb-lesC3od46vpByJaI4HOgVWWQ&s" }
+                ],
+                respuesta: "Cuánto Me Duele"
+            },
+            {
+                audio: "static/audio/Acuérdate De Mí - Morat.mp3",
+                opciones: [
+                    { texto: "Acuérdate De Mí", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" },
+                    { texto: "Salir Con Vida", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSym4F_JLAnaQqwLUkF7dMV3gZW12cFBxonkQ&s" },
+                    { texto: "Eres Tú", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" },
+                    { texto: "Punto Y Aparte", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTq1AcyFFOVD9TBh4BWSgPDMZmVi3QERakPhg&s" }
+                ],
+                respuesta: "Acuérdate De Mí"
+            },
+            {
+                audio: "static/audio/Punto Y Aparte - Morat.mp3",
+                opciones: [
+                    { texto: "No Se Va", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" },
+                    { texto: "Punto Y Aparte", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTq1AcyFFOVD9TBh4BWSgPDMZmVi3QERakPhg&s" },
+                    { texto: "Eclipse Solar", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlsCtmcK0pCDmcq8BgzALJTeTFgu8vpXlrZXLzthwiChFODs7JY13zWVeWODt9eQD6HVM&usqp=CAU" },
+                    { texto: "Yo No Merezco Volver", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" }
+                ],
+                respuesta: "Punto Y Aparte"
+            },
+            {
+                audio: "static/audio/No Se Va - Morat.mp3",
+                opciones: [
+                    { texto: "Ya No Estas Tu", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" },
+                    { texto: "Si La Ves", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHxECkQVNubDj3yM_veWB68QpGtjCwBYVNxQ&s" },
+                    { texto: "Antes De Los Veinte", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQYJWluOOySuUaLOyiX7PAP3X4U2Enrr-JGw&s" },
+                    { texto: "No Se Va", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" }
+                ],
+                respuesta: "No Se Va"
+            },
+            {
+                audio: "static/audio/23 - Morat.mp3",
+                 opciones: [
+                    { texto: "23", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRS0iPvV2R7HyMnWl_xCo-Ym3Lg47QvBcHBew&s" },
+                    { texto: "506", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQAIEntfsYBMOSjdjWR7IA-QcKeFWfAvSIfQ&s" },
+                    { texto: "Acuérdate De Mí", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" },
+                    { texto: "Cuando Nadie Ve", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRg1Luxvh4wmSLY9pJFAJtlXrKn-yNHuIfTA&s" }
+                ],
+                respuesta: "23"
+            },
+            {
+                audio: "static/audio/Causa Perdida - Morat.mp3",
+                opciones: [
+                    { texto: "Causa Perdida", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" },
+                    { texto: "No Se Va", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" },
+                    { texto: "Presiento", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsXfBOCHcU3hLxkFtSYpy2aDIQx5XeNpqtMw&s" },
+                    { texto: "Faltas Tú", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6W-Q1ELjFci78oGMD9crOztz0CKztJMlXdg&s" }
+                ],
+                respuesta: "Causa Perdida"
+
+            },
+            {
+                audio: "static/audio/Cómo Te Atreves - Morat.mp3",
+                opciones: [
+                    { texto: "Mi Nuevo Vicio", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" },
+                    { texto: "Enamórate De Alguien Más", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVOsVLxK_orq_7crOFJKLAxvv9ZwMnwgYncw&s" },
+                    { texto: "Cómo Te Atreves", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" },
+                    { texto: "Llamada Perdida", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRubwp4m2gxin0Ymkp0pbLrKbApkWzG0M_Pig&s" }
+                ],
+                respuesta: "Cómo Te Atreves"
+            },
+            {
+                audio: "static/audio/Llamada Perdida - Morat.mp3",
+                opciones: [
+                    { texto: "Causa Perdida", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSg7_tTG1wwTflfrDtrFNriDx9PQJ1e8ciCFg&s" },
+                    { texto: "23", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRS0iPvV2R7HyMnWl_xCo-Ym3Lg47QvBcHBew&s" },
+                    { texto: "Yo No Merezco Volver", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsXfBOCHcU3hLxkFtSYpy2aDIQx5XeNpqtMw&s" },
+                    { texto: "Llamada Perdida", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRubwp4m2gxin0Ymkp0pbLrKbApkWzG0M_Pig&s" }
+                ],
+                respuesta: "Llamada Perdida"
+            },
+            {
+                audio: "static/audio/Presiento - Morat.mp3",
+                opciones: [
+                    { texto: "Más De Lo Que Aposté", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCYQ3WLcAS0fVcDAG7raRObi2FCgzJgWIEIw&s" },
+                    { texto: "Cuando El Amor Se Escapa", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwMoOueeT7iA4ldGgj0uu8cjJzGYEhfCILA&s" },
+                    { texto: "Presiento", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsXfBOCHcU3hLxkFtSYpy2aDIQx5XeNpqtMw&s" },
+                    { texto: "Idiota", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGJihL7SOaVa1b7Yk1vF6rohlPbd27Nfmtwg&s" }
+                ],
+                respuesta: "Presiento"
+            },
+            {
+            audio: "static/audio/506 - Morat.mp3",
+                opciones: [
+                    { texto: "Bajo La Mesa", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAMUyed1mQ42SFUOkIthUM3V6NsoE5BedQNg&s" },
+                    { texto: "506", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQAIEntfsYBMOSjdjWR7IA-QcKeFWfAvSIfQ&s" },
+                    { texto: "Antes De Los Treinta", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGMdXK9Rr1kOyXaqdlUSL8UNumpLS6GOcWLA&s" },
+                    { texto: "Nunca Te Olvidé", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqbbc_zC_uoF1GksL3JX9VSUplf3fT9T_9ig&s" }
+                ],
+                respuesta: "506"
+            },
+            {
+                audio: "static/audio/Yo No Merezco Volver - Morat.mp3",
+                opciones: [
+                    { texto: "Yo No Merezco Volver", imagen: "https://cloudfront-eu-central-1.images.arcpublishing.com/prisaradiolos40/SOFAC3XCLZMKJHCVYTDIMOUNAQ.jpg" },
+                    { texto: "Enamorate De Alguien Más", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVOsVLxK_orq_7crOFJKLAxvv9ZwMnwgYncw&s" },
+                    { texto: "Nunca Al Revés", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHxECkQVNubDj3yM_veWB68QpGtjCwBYVNxQ&s" },
+                    { texto: "Causa Perdida", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSg7_tTG1wwTflfrDtrFNriDx9PQJ1e8ciCFg&s" }
+                ],
+                  respuesta: "Yo No Merezco Volver" 
+            },
+            {
+            audio: "static/audio/Al Aire - Morat.mp3",
+                opciones: [
+                    { texto: "Nunca Te Olvidé", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqbbc_zC_uoF1GksL3JX9VSUplf3fT9T_9ig&s" },
+                    { texto: "Mil Tormentas", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBl1vplbIoXF3OOthmhx4jTYk4Xr7rP7rLOg&s" },
+                    { texto: "Al Aire", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpQrtBgNicPb9JgRBuIm8ARvw_X4aBAAf7Cg&s" },
+                    { texto: "Sobreviviste", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREBOM29XPV6KOyLsdCaJnKOLS8-LJpbuMcCQ&s" }
+                ],
+                respuesta: "Al Aire"
+            },
+            {
+                
+            audio: "static/audio/Cuando Nadie Ve - Morat.mp3",
+                opciones: [
+                    { texto: "Besos En Guerra", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOEpyhXsoAIr33T5r51Zwf_tb6pYwmnkdpPA&s" },
+                    { texto: "Cuando Nadie Ve", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRg1Luxvh4wmSLY9pJFAJtlXrKn-yNHuIfTA&s" },
+                    { texto: "Al Aire", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpQrtBgNicPb9JgRBuIm8ARvw_X4aBAAf7Cg&s" },
+                    { texto: "En Un Solo Día", imagen: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f2/45/33/f2453376-4dc1-43fc-c9ab-5ea017315abe/16UMGIM31590.rgb.jpg/1200x630bf-60.jpg" }
+                ],
+                respuesta: "Cuando Nadie Ve"
+            },
+            {
+            audio: "static/audio/Mi Nuevo Vicio - Morat.mp3",
+                opciones: [
+                    { texto: "Mi Nuevo Vicio", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBl1vplbIoXF3OOthmhx4jTYk4Xr7rP7rLOg&s" },
+                    { texto: "Idiota", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGJihL7SOaVa1b7Yk1vF6rohlPbd27Nfmtwg&s" },
+                    { texto: "París", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThAU_8T_JMyZWAHChZzPUziDzCN4r2lqw-dg&s" },
+                    { texto: "A Donde Vamos", imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnaJXuXBwDPrpeuxIAXgtfxqFPS2g4J4k9cw&s" }
+                ],
+                respuesta: "Mi Nuevo Vicio"
+            }
+        ];
+
+        let indice = 0;
+        let correctas = 0;
+        let total = 0;
+        let bonusTotal = 0;
+        let currentAudio = null;
+        let startTime = null;
+        let timerInterval = null;
+        let isPlaying = false;
+
+        // Función para mezclar array (algoritmo Fisher-Yates)
+        function mezclarArray(array) {
+            const arrayMezclado = [...array];
+            for (let i = arrayMezclado.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arrayMezclado[i], arrayMezclado[j]] = [arrayMezclado[j], arrayMezclado[i]];
+            }
+            return arrayMezclado;
+        }
+
+        function actualizarProgreso() {
+            const progreso = ((indice) / preguntas.length) * 100;
+            document.getElementById('progress-bar').style.width = progreso + '%';
+            document.getElementById('current-question').textContent = indice + 1;
+            document.getElementById('total-questions').textContent = preguntas.length;
+        }
+
+        function actualizarPuntuacion() {
+            document.getElementById('correct-score').textContent = correctas;
+            document.getElementById('total-score').textContent = total;
+            document.getElementById('bonus-score').textContent = bonusTotal;
+            const porcentaje = total > 0 ? Math.round((correctas / total) * 100) : 0;
+            document.getElementById('percentage').textContent = porcentaje + '%';
+        }
+
+        function toggleAudio() {
+            const playButton = document.getElementById('play-button');
+            const playIcon = document.getElementById('play-icon');
+            
+            if (!currentAudio) {
+                // Si no hay audio cargado, cargarlo
+                currentAudio = new Audio(preguntas[indice].audio);
+                
+                currentAudio.onplay = () => {
+                    isPlaying = true;
+                    playButton.classList.add('playing');
+                    playIcon.textContent = '⏸️';
+                    startTimer();
+                };
+                
+                currentAudio.onpause = () => {
+                    isPlaying = false;
+                    playButton.classList.remove('playing');
+                    playIcon.textContent = '🔊';
+                    stopTimer();
+                };
+                
+                currentAudio.onended = () => {
+                    isPlaying = false;
+                    playButton.classList.remove('playing');
+                    playIcon.textContent = '🔊';
+                    stopTimer();
+                };
+                
+                currentAudio.play().catch(error => {
+                    console.log('Error al reproducir audio:', error);
+                    alert('❌ Error al cargar el audio. Verifica que el archivo existe.');
+                });
+            } else if (isPlaying) {
+                // Si está sonando, pausarlo
+                currentAudio.pause();
+            } else {
+                // Si está pausado, reanudar
+                currentAudio.play().catch(error => {
+                    console.log('Error al reanudar audio:', error);
+                });
+            }
+        }
+
+        function startTimer() {
+            startTime = new Date();
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function stopTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function calculateTimeBonus() {
+            if (!startTime) return 0;
+            
+            const endTime = new Date();
+            const timeSpent = (endTime - startTime) / 1000; // en segundos
+            
+            // Bonus máximo de 100 puntos si respondes en menos de 5 segundos
+            // El bonus disminuye linealmente hasta 0 puntos a los 30 segundos
+            let bonus = Math.max(0, 100 - (timeSpent * 4));
+            bonus = Math.round(bonus);
+            
+            return bonus;
+        }
+
+        function mostrarPregunta() {
+            const pregunta = preguntas[indice];
+            const opcionesContainer = document.getElementById("opciones");
+            opcionesContainer.innerHTML = "";
+
+            // Resetear el audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            isPlaying = false;
+            stopTimer();
+            
+            actualizarProgreso();
+
+            // Mostrar mensaje de transición si no es la primera pregunta
+            if (indice > 0) {
+                mostrarTransicion();
+            }
+
+            pregunta.opciones.forEach(opcion => {
+                const btn = document.createElement("button");
+                btn.className = "option-button";
+                
+                // Crear imagen de la portada
+                const img = document.createElement("img");
+                img.src = opcion.imagen;
+                img.alt = opcion.texto;
+                img.className = "album-cover";
+                
+                // Crear texto de la opción
+                const span = document.createElement("span");
+                span.textContent = opcion.texto;
+                
+                btn.appendChild(img);
+                btn.appendChild(span);
+                btn.onclick = () => verificarRespuesta(opcion.texto, pregunta.respuesta, btn);
+                opcionesContainer.appendChild(btn);
+            });
+
+            // Configurar el botón de play/pause
+            const playButton = document.getElementById('play-button');
+            playButton.onclick = toggleAudio;
+            playButton.classList.remove('playing');
+            document.getElementById('play-icon').textContent = '🔊';
+        }
+
+        function mostrarTransicion() {
+            const overlay = document.createElement('div');
+            overlay.className = 'transition-overlay';
+            overlay.innerHTML = `
+                <div class="transition-message">
+                    🎵 Preparando siguiente canción...<br>
+                    <small>Pregunta ${indice + 1} de ${preguntas.length}</small>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => {
+                overlay.remove();
+            }, 1500);
+        }
+
+        function verificarRespuesta(seleccion, correcta, botonSeleccionado) {
+            // Detener la música y el temporizador
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            stopTimer();
+            
+            total++;
+            const esCorrecta = seleccion === correcta;
+            
+            // Deshabilitar todos los botones inmediatamente
+            const botones = document.querySelectorAll('.option-button');
+            botones.forEach(btn => btn.disabled = true);
+
+            if (esCorrecta) {
+                correctas++;
+                const bonus = calculateTimeBonus();
+                bonusTotal += bonus;
+                
+                botonSeleccionado.classList.add('correct');
+                mostrarMensajeTemporal(`✅ ¡Correcto! +${bonus} bonus`, 'success');
+                
+                // Mostrar el bonus visualmente
+                if (bonus > 0) {
+                    const bonusElement = document.createElement('div');
+                    bonusElement.className = 'time-bonus';
+                    bonusElement.textContent = `+${bonus}`;
+                    botonSeleccionado.appendChild(bonusElement);
+                    
+                    setTimeout(() => {
+                        bonusElement.remove();
+                    }, 2000);
+                }
+            } else {
+                botonSeleccionado.classList.add('incorrect');
+                // Mostrar la respuesta correcta automáticamente
+                botones.forEach(btn => {
+                    if (btn.querySelector('span').textContent === correcta) {
+                        btn.classList.add('correct');
+                    }
+                });
+                mostrarMensajeTemporal('❌ Respuesta incorrecta', 'error');
+            }
+
+            actualizarPuntuacion();
+
+            // Avanzar automáticamente después de 2.5 segundos
+            setTimeout(() => {
+                indice++;
+                if (indice < preguntas.length) {
+                    mostrarPregunta();
+                } else {
+                    mostrarResultadoFinal();
+                }
+            }, 2000);
+        }
+
+        function mostrarMensajeTemporal(mensaje, tipo) {
+            // Crear elemento de mensaje temporal
+            const mensajeDiv = document.createElement('div');
+            mensajeDiv.className = `mensaje-temporal ${tipo}`;
+            mensajeDiv.textContent = mensaje;
+            
+            // Insertar después del botón de reproducir
+            const audioSection = document.querySelector('.audio-section');
+            audioSection.appendChild(mensajeDiv);
+            
+            // Remover después de 2 segundos
+            setTimeout(() => {
+                if (mensajeDiv.parentNode) {
+                    mensajeDiv.remove();
+                }
+            }, 2000);
+        }
+
+        function mostrarResultadoFinal() {
+            const porcentaje = Math.round((correctas / total) * 100);
+            let mensaje = '';
+            let emoji = '';
+
+            if (porcentaje >= 90) {
+                mensaje = '¡Eres un maestro de la música!';
+                emoji = '🏆';
+            } else if (porcentaje >= 70) {
+                mensaje = '¡Excelente conocimiento musical!';
+                emoji = '🎖️';
+            } else if (porcentaje >= 50) {
+                mensaje = 'Te falta para ser una gran fan!';
+                emoji = '👏';
+            } else {
+                mensaje = '¡Sigue practicando!';
+                emoji = '💪';
+            }
+
+            document.querySelector('.game-container').innerHTML = `
+                <div class="game-over">
+                    <h1>${emoji} ¡Juego Terminado!</h1>
+                    <p class="subtitle">${mensaje}</p>
+                    
+                    <div style="margin: 30px 0;">
+                        <div style="font-size: 3rem; color: #fff; font-weight: 700;">${correctas}/${total}</div>
+                        <div style="font-size: 1.5rem; color: #bdc3c7; margin-top: 10px;">${porcentaje}% de aciertos</div>
+                        <div style="font-size: 1.2rem; color: #feca57; margin-top: 10px; font-weight: 600;">Bonus: ${bonusTotal} puntos</div>
+                    </div>
+                    
+                    <button class="restart-button" onclick="reiniciarJuego()">
+                         Jugar de Nuevo
+                    </button>
+                </div>
+            `;
+        }
+
+        function reiniciarJuego() {
+            indice = 0;
+            correctas = 0;
+            total = 0;
+            bonusTotal = 0;
+            location.reload();
+        }
+
+        window.onload = () => {
+            // Mezclar las preguntas al cargar el juego
+            preguntas = mezclarArray(preguntas);
+            mostrarPregunta();
+            actualizarPuntuacion();
+            
+            // Configurar el botón de play/pause
+            document.getElementById('play-button').onclick = toggleAudio;
+        };
+    </script>
+</body>
+</html>
